@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>매병 풍경 만들기 사후활동 추억앨범 (태블릿 터치색칠·세로출력 에디션)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background-color: #f4f9ff;
+            margin: 0;
+            padding: 12px 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            transition: background-color 0.3s;
+            overscroll-behavior: contain;
+        }
+
+        /* 🔒 학생 집중 모드일 때 전체 배경을 차분한 파스텔톤으로 전환 */
+        body.focus-mode {
+            background-color: #edf2ff;
+            padding: 16px 24px;
+        }
+
+        /* 상단 헤더 & 6명 학생 빠른 전환 바 */
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 15px;
+            border-bottom: 4px solid #4dabf7;
+            gap: 10px;
+        }
+        .app-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: #1971c2;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .student-roster {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .roster-btn {
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 13px;
+            border-radius: 30px;
+            border: 3px solid #dee2e6;
+            background: #f8f9fa;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .roster-btn:hover { border-color: #74c0fc; }
+        .roster-btn.active {
+            background: #228be6;
+            color: white;
+            border-color: #1864ab;
+            transform: scale(1.06);
+            box-shadow: 0 4px 10px rgba(34, 139, 230, 0.35);
+        }
+        .lvl-badge {
+            font-size: 12px;
+            padding: 2px 7px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.12);
+        }
+        .roster-btn.active .lvl-badge {
+            background: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+        .top-right-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .focus-toggle-btn {
+            font-size: 16px;
+            padding: 9px 16px;
+            border-radius: 12px;
+            border: 3px solid #7950f2;
+            background: #7950f2;
+            color: white;
+            cursor: pointer;
+            font-weight: 900;
+            box-shadow: 0 4px 10px rgba(121, 80, 242, 0.3);
+            transition: 0.2s;
+        }
+        .focus-toggle-btn:hover { background: #6741d9; }
+        .config-btn {
+            font-size: 14px;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 2px solid #adb5bd;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        /* 🔒 학생 집중 모드 전용 상단 미니 컨트롤 바 */
+        .focus-floating-bar {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 10px 22px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+            border: 3px solid #7950f2;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        body.focus-mode .focus-floating-bar {
+            display: flex;
+        }
+        body.focus-mode .top-bar,
+        body.focus-mode .teacher-only-step {
+            display: none !important;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 22px;
+            flex: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+        }
+
+        /* 왼쪽: 선택 및 조작 패널 */
+        .left-panel {
+            flex: 1.02;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .step-container {
+            background: white;
+            padding: 15px 18px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 6px solid #74c0fc;
+            transition: all 0.25s;
+        }
+
+        .step-container.active-task-1 {
+            border: 4px solid #ff922b;
+            box-shadow: 0 6px 18px rgba(255, 146, 43, 0.2);
+        }
+        .step-container.active-task-2 {
+            border: 4px solid #40c057;
+            box-shadow: 0 6px 18px rgba(64, 192, 87, 0.2);
+        }
+        .step-container.waiting-step {
+            opacity: 0.45;
+            transform: scale(0.98);
+        }
+
+        h2 {
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            color: #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        body.focus-mode h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .top-inputs {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        select.trip-select {
+            font-size: 17px;
+            padding: 8px 10px;
+            border: 3px solid #a5d8ff;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #1971c2;
+            background: #e7f5ff;
+            cursor: pointer;
+        }
+        input[type="text"].place-input {
+            font-size: 16px;
+            padding: 8px 10px;
+            width: 145px;
+            border: 3px solid #ffd8a8;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            background: #fff9db;
+        }
+        input[type="text"].student-input {
+            font-size: 17px;
+            padding: 8px 10px;
+            width: 105px;
+            border: 3px solid #a5d8ff;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .level-tabs {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            margin-top: 6px;
+        }
+        .lvl-tab {
+            flex: 1;
+            padding: 8px 6px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+            background: #f8f9fa;
+            color: #555;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .lvl-tab.active.lvl-1 { background: #1971c2; color: white; border-color: #1971c2; }
+        .lvl-tab.active.lvl-2 { background: #2b8a3e; color: white; border-color: #2b8a3e; }
+        .lvl-tab.active.lvl-3 { background: #e67700; color: white; border-color: #e67700; }
+
+        /* 2. 사진 고르기 & 점묘화/색칠 도안 옵션 */
+        .upload-btn {
+            display: inline-block;
+            background-color: #4dabf7;
+            color: white;
+            padding: 7px 14px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .photo-thumbnails {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 6px 0;
+            min-height: 82px;
+            align-items: center;
+        }
+        .thumb-img {
+            width: 98px;
+            height: 74px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 4px solid #dee2e6;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .thumb-img.active {
+            border-color: #ff6b6b;
+            transform: scale(1.06);
+            box-shadow: 0 4px 10px rgba(255,107,107,0.4);
+        }
+
+        .coloring-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            margin-top: 6px;
+            padding-top: 8px;
+            border-top: 2px dashed #eee;
+        }
+        .mode-btn {
+            font-size: 14px;
+            padding: 7px 11px;
+            border-radius: 8px;
+            border: 2px solid #ced4da;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: bold;
+            color: #495057;
+        }
+        .mode-btn.active {
+            background: #ff922b;
+            color: white;
+            border-color: #f76707;
+        }
+        .frame-toggle-btn {
+            font-size: 14px;
+            padding: 7px 11px;
+            border-radius: 8px;
+            border: 2px solid #f06595;
+            background: #fff0f6;
+            color: #c2255c;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .frame-toggle-btn.active {
+            background: #e64980;
+            color: white;
+        }
+        .layout-btn {
+            font-size: 14px;
+            padding: 7px 11px;
+            border-radius: 8px;
+            border: 2px solid #845ef7;
+            background: #f3f0ff;
+            color: #5f3dc4;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            width: 100%;
+            margin-top: 4px;
+            justify-content: flex-end;
+        }
+
+        /* 3 & 4. 그림+문장 선택 버튼 */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .word-btn {
+            font-size: 17px;
+            padding: 12px 14px;
+            border: 3px solid #ffd8a8;
+            border-radius: 16px;
+            background-color: #fff9db;
+            color: #d9480f;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            text-align: left;
+            line-height: 1.3;
+        }
+        .word-btn.group2 {
+            background-color: #ebfbee;
+            border-color: #b2f2bb;
+            color: #2b8a3e;
+        }
+        .emoji-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+            background: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        body.mode-lvl-3 .word-btn {
+            font-size: 24px;
+            padding: 18px 16px;
+            justify-content: center;
+            border-width: 4px;
+        }
+        body.mode-lvl-3 .emoji-icon {
+            font-size: 46px;
+            width: 64px;
+            height: 64px;
+        }
+
+        .btn-grid.has-selection .word-btn:not(.active) {
+            opacity: 0.38;
+            filter: grayscale(40%);
+            transform: scale(0.97);
+        }
+        .word-btn.active {
+            background-color: #ff6b6b;
+            border-color: #c92a2a;
+            color: white;
+            transform: scale(1.02);
+            box-shadow: 0 6px 14px rgba(255, 107, 107, 0.45);
+        }
+        .word-btn.group2.active {
+            background-color: #37b24d;
+            border-color: #2b8a3e;
+            color: white;
+            box-shadow: 0 6px 14px rgba(55, 178, 77, 0.45);
+        }
+
+        #lvl1-typing-box {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px dashed #d0ebff;
+            display: none;
+        }
+        .lvl1-input {
+            width: 96%;
+            font-size: 18px;
+            padding: 10px;
+            border: 3px solid #74c0fc;
+            border-radius: 12px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        #lvl2-eojeol-box {
+            background: #fff9db;
+            border: 4px solid #fcc419;
+            border-radius: 18px;
+            padding: 14px 18px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .eojeol-title {
+            font-size: 19px;
+            font-weight: 900;
+            color: #d9480f;
+            margin: 0;
+        }
+        .eojeol-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .eojeol-chip {
+            padding: 10px 18px;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 25px;
+            border: 4px solid #fab005;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #f59f00;
+            transition: transform 0.1s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .eojeol-chip:active, .eojeol-chip.spoken {
+            transform: translateY(3px);
+            background: #ffd43b;
+            color: #d9480f;
+            border-color: #f08c00;
+            box-shadow: 0 2px 0 #f08c00;
+        }
+        .eojeol-arrow {
+            font-size: 20px;
+            color: #f08c00;
+            font-weight: bold;
+        }
+        .speak-all-btn {
+            font-size: 17px;
+            font-weight: bold;
+            padding: 8px 22px;
+            border-radius: 24px;
+            border: none;
+            background: #fd7e14;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* 오른쪽: 태블릿 터치 팔레트 + A4 세로형 활동지 미리보기 영역 */
+        .right-panel {
+            flex: 1.18;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 🎨 태블릿 터치 색칠 팔레트 바 (인쇄 시에는 자동 숨김) */
+        .tablet-paint-toolbar {
+            width: 100%;
+            max-width: 650px;
+            background: #ffffff;
+            border: 3px solid #7950f2;
+            border-radius: 18px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 14px rgba(121, 80, 242, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .paint-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .paint-mode-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .paint-tool-btn {
+            font-size: 15px;
+            font-weight: 900;
+            padding: 8px 13px;
+            border-radius: 12px;
+            border: 3px solid #dee2e6;
+            background: #f8f9fa;
+            color: #495057;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+        }
+        .paint-tool-btn.active.magic-btn {
+            background: #7950f2;
+            border-color: #5f3dc4;
+            color: white;
+            box-shadow: 0 4px 10px rgba(121, 80, 242, 0.35);
+            transform: scale(1.03);
+        }
+        .paint-tool-btn.active.crayon-btn {
+            background: #f76707;
+            border-color: #d9480f;
+            color: white;
+            box-shadow: 0 4px 10px rgba(247, 103, 7, 0.35);
+            transform: scale(1.03);
+        }
+        .paint-tool-btn.active.eraser-btn {
+            background: #495057;
+            border-color: #212529;
+            color: white;
+        }
+        .reset-paint-btn {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 7px 11px;
+            border-radius: 10px;
+            border: 2px solid #ffa8a8;
+            background: #fff5f5;
+            color: #e03131;
+            cursor: pointer;
+        }
+
+        /* 🖍️ 8색 무지개 팔레트 & 굵기 선택 줄 */
+        .crayon-palette-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 6px;
+            border-top: 2px dashed #edf2ff;
+        }
+        .color-swatches {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .color-swatch {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 3px solid #dee2e6;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+        }
+        .color-swatch.active {
+            transform: scale(1.22);
+            border: 4px solid #212529;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+        .brush-size-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+        }
+        .size-dot-btn {
+            border: 2px solid #ced4da;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px 9px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .size-dot-btn.active {
+            background: #228be6;
+            color: white;
+            border-color: #1864ab;
+        }
+
+        #album-sheet {
+            width: 100%;
+            max-width: 650px;
+            background-color: #ffffff;
+            padding: 18px 22px;
+            border-radius: 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            border: 4px solid #333;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+        #album-sheet.with-pattern-frame {
+            padding: 24px 26px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cpath d='M22 12 L27 24 L40 24 L30 32 L34 44 L22 36 L10 44 L14 32 L4 24 L17 24 Z' stroke='%23888' stroke-width='2' fill='none'/%3E%3Cpath d='M68 52 A 9 9 0 0 1 86 52 C 86 65 68 78 68 78 C 68 78 50 65 50 52 A 9 9 0 0 1 68 52 Z' stroke='%23888' stroke-width='2' fill='none'/%3E%3Ccircle cx='25' cy='72' r='9' stroke='%23888' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+        }
+
+        .sheet-header {
+            text-align: center;
+            border-bottom: 3px dashed #555;
+            padding: 10px;
+            background: rgba(255,255,255,0.96);
+            border-radius: 12px;
+            border: 3px solid #333;
+        }
+        .sheet-title {
+            font-size: 25px;
+            font-weight: 900;
+            color: #222;
+            margin: 0;
+        }
+        .sheet-subtitle {
+            font-size: 14px;
+            color: #555;
+            margin: 4px 0 0 0;
+            font-weight: bold;
+        }
+
+        /* 👀 보고 색칠하기: 왼쪽(원본 컬러) + 오른쪽(터치 색칠 캔버스) */
+        .coloring-compare-area {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            height: 295px;
+        }
+        .photo-box {
+            flex: 1;
+            border: 3px solid #333;
+            border-radius: 14px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .photo-box.sketch-box {
+            flex: 1.3;
+            border: 4px solid #7950f2;
+            box-shadow: 0 0 0 3px rgba(121, 80, 242, 0.15);
+        }
+        .box-label {
+            background: #e9ecef;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px;
+            text-align: center;
+            border-bottom: 2px solid #ccc;
+        }
+        .sketch-box .box-label {
+            background: #f3f0ff;
+            color: #5f3dc4;
+            border-bottom: 2px dashed #b197fc;
+        }
+        .box-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fff;
+            padding: 4px;
+            position: relative;
+        }
+        #reference-img, #coloring-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        /* ⭐ 태블릿에서 손가락으로 문지를 때 화면 스크롤이 움직이지 않도록 고정 */
+        #coloring-canvas {
+            touch-action: none;
+            cursor: crosshair;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .canvas-placeholder {
+            color: #bbb;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* ✏️ 1수준 & 2수준용: 덧쓰기 줄공책 영역 */
+        #tracing-paper {
+            width: 100%;
+            min-height: 230px;
+            background-color: #fffde7;
+            background-image: repeating-linear-gradient(transparent, transparent 59px, #cfcfcf 59px, #cfcfcf 60px);
+            padding: 0 20px;
+            border-radius: 12px;
+            line-height: 60px;
+            font-size: 24px;
+            text-align: left;
+            box-sizing: border-box;
+            border: 3px solid #333;
+            color: #b5b5b5;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #tracing-paper.lvl2-paper {
+            background-image: repeating-linear-gradient(transparent, transparent 75px, #cfcfcf 75px, #cfcfcf 76px);
+            line-height: 76px;
+            font-size: 30px;
+            text-align: center;
+        }
+        .signature-line {
+            text-align: right;
+            font-size: 24px;
+            color: #b5b5b5;
+        }
+        #tracing-paper.lvl2-paper .signature-line {
+            font-size: 29px;
+        }
+
+        /* 🎨 3수준 전용 학습지 하단 */
+        #lvl3-sheet-area {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            min-height: 230px;
+        }
+        .lvl3-sticker-row {
+            display: flex;
+            gap: 14px;
+            height: 118px;
+        }
+        .lvl3-sticker-card {
+            flex: 1;
+            border: 3px solid #333;
+            border-radius: 15px;
+            background: #fff9db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 10px;
+        }
+        .lvl3-big-emoji {
+            font-size: 60px;
+            line-height: 1;
+        }
+        .lvl3-card-label {
+            font-size: 23px;
+            font-weight: 900;
+            color: #333;
+            text-align: left;
+        }
+        .lvl3-name-box {
+            border: 4px dashed #333;
+            border-radius: 15px;
+            background: #fff;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 95px;
+            box-sizing: border-box;
+        }
+        .lvl3-name-guide {
+            font-size: 19px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+        }
+        .lvl3-giant-name {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: 14px;
+            color: #ffffff;
+            -webkit-text-stroke: 3px #888888;
+            text-stroke: 3px #888888;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 650px;
+            margin-top: 12px;
+        }
+        .action-btn {
+            flex: 1;
+            font-size: 19px;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-save-img { background-color: #228be6; }
+        .btn-print-sheet { background-color: #4CAF50; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-card {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 20px;
+            width: 520px;
+            max-width: 92%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .roster-edit-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .roster-edit-row input {
+            flex: 1;
+            font-size: 18px;
+            padding: 8px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .roster-edit-row select {
+            font-size: 17px;
+            padding: 8px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        /* 🖨️ A4 세로(Portrait) 전용 인쇄 레이아웃 (팔레트 툴바는 자동 숨김) */
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background-color: white; padding: 0; margin: 0; }
+            .top-bar, .focus-floating-bar, .left-panel, .tablet-paint-toolbar, .action-btns, .modal-overlay { display: none !important; }
+            .main-container { display: block; width: 100%; max-width: 100%; margin: 0; }
+            .right-panel { width: 100%; display: block; }
+            
+            #album-sheet {
+                box-shadow: none;
+                border: 4px solid #222;
+                margin: 0 auto;
+                width: 100%;
+                max-width: 100%;
+                height: 275mm;
+                padding: 24px 26px;
+                justify-content: space-between;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cpath d='M22 12 L27 24 L40 24 L30 32 L34 44 L22 36 L10 44 L14 32 L4 24 L17 24 Z' stroke='%23888' stroke-width='2' fill='none'/%3E%3Cpath d='M68 52 A 9 9 0 0 1 86 52 C 86 65 68 78 68 78 C 68 78 50 65 50 52 A 9 9 0 0 1 68 52 Z' stroke='%23888' stroke-width='2' fill='none'/%3E%3Ccircle cx='25' cy='72' r='9' stroke='%23888' stroke-width='2' fill='none'/%3E%3C/svg%3E") !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .sheet-title { font-size: 30px; }
+            .coloring-compare-area { height: 420px; }
+            .photo-box { border: 3px solid #222; }
+            .photo-box.sketch-box { border: 4px solid #222; box-shadow: none; }
+            #tracing-paper {
+                color: #b8b8b8 !important;
+                border: 3px solid #222;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .lvl3-giant-name {
+                color: #ffffff !important;
+                -webkit-text-stroke: 3px #666666 !important;
+            }
+        }
+    </style>
+</head>
+<body class="mode-lvl-1">
+
+    <!-- 🔒 학생 집중 모드일 때만 나타나는 깔끔한 상단 안내 바 -->
+    <div class="focus-floating-bar">
+        <div style="font-size: 21px; font-weight: 900; color: #5f3dc4;">
+            ✨ <span id="focusStudentName">학생</span>의 매병 풍경 만들기 (태블릿 터치 색칠)
+            <span style="font-size: 14px; color: #666; font-weight: bold; margin-left: 8px;">(Alt+1~6: 학생전환 / Alt+F: 설정복귀)</span>
+        </div>
+        <button class="focus-toggle-btn" style="background:#495057; border-color:#343a40;" onclick="toggleFocusMode()">🔓 교사 설정 화면으로</button>
+    </div>
+
+    <!-- 상단: 우리 반 6명 빠른 전환 바 (교사 설정 모드) -->
+    <div class="top-bar">
+        <div class="app-title">
+            🏺 박물관 체험학습 추억앨범 (태블릿 색칠용)
+            <span style="font-size:13px; color:#666; font-weight:normal;">(Alt+1~6 / Alt+F)</span>
+        </div>
+        <div class="student-roster" id="rosterBar"></div>
+        <div class="top-right-btns">
+            <button class="focus-toggle-btn" onclick="toggleFocusMode()">🔒 학생 집중 모드 켜기 (Alt+F)</button>
+            <button class="config-btn" onclick="openRosterModal()">⚙️ 6명 명단 설정</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 왼쪽: 수준별 맞춤형 조작 패널 -->
+        <div class="left-panel">
+            
+            <!-- 교사 설정 전용 Step 1 -->
+            <div class="step-container teacher-only-step">
+                <h2>
+                    <span>1. 체험학습 주제 & 학생 수준 전환</span>
+                    <span id="levelDescText" style="font-size:14px; color:#1971c2;">🥇 1수준: 문장 따라 쓰기 및 직접 타이핑</span>
+                </h2>
+                <div class="top-inputs">
+                    <select id="tripSelect" class="trip-select" onchange="updateSheet()">
+                        <option value="찾아오는 박물관 (매병 풍경 만들기)" selected>🏺 찾아오는 박물관 (매병 풍경 만들기)</option>
+                        <option value="박물관·전시관 체험">🏛️ 박물관·전시관 체험</option>
+                        <option value="가을 현장체험학습">🍁 가을 현장체험학습</option>
+                        <option value="봄 현장체험학습">🌸 봄 현장체험학습</option>
+                        <option value="공원·식물원 나들이">🌳 공원·식물원 나들이</option>
+                        <option value="영화관·공연 관람">🎬 영화관·공연 관람</option>
+                        <option value="요리·만들기 체험">🍕 요리·만들기 체험</option>
+                    </select>
+                    <input type="text" id="placeName" class="place-input" placeholder="주제 직접입력(선택)" oninput="updateSheet()">
+                    <input type="text" id="studentName" class="student-input" placeholder="이름 입력" oninput="updateSheet()">
+                    
+                    <div class="level-tabs">
+                        <button class="lvl-tab lvl-1 active" onclick="setStudentLevel(1)">🥇 1수준(문장)</button>
+                        <button class="lvl-tab lvl-2" onclick="setStudentLevel(2)">🥈 2수준(어절)</button>
+                        <button class="lvl-tab lvl-3" onclick="setStudentLevel(3)">🥉 3수준(그림 4개)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 교사 설정 전용 Step 2 -->
+            <div class="step-container teacher-only-step">
+                <h2>
+                    <span>2. 활동 사진 & 점묘화/색칠 밑그림 스타일</span>
+                    <label for="photoInput" class="upload-btn">📷 사진 찍기 / 폴더에서 불러오기</label>
+                    <input type="file" id="photoInput" multiple accept="image/*" style="display:none;" onchange="loadPhotos(event)">
+                </h2>
+                <div class="photo-thumbnails" id="thumbContainer">
+                    <span style="color:#999; font-size:15px;">위의 파란 버튼을 눌러 태블릿 카메라로 찍거나 사진을 불러오세요.</span>
+                </div>
+                <div class="coloring-controls">
+                    <button class="mode-btn active" onclick="setColorMode('pointillism', this)">🟣 점묘화(콕콕 찍기) 도안</button>
+                    <button class="mode-btn" onclick="setColorMode('pastel', this)">✨ 수채화 밑색 도안</button>
+                    <button class="mode-btn" onclick="setColorMode('comic', this)">📕 굵은 만화선 도안</button>
+                    <button class="mode-btn" onclick="setColorMode('sketch', this)">✏️ 일반 윤곽선</button>
+                    <button class="frame-toggle-btn" id="frameBtn" onclick="togglePatternFrame()">⭐ 화면 여백무늬 끄기(인쇄시 자동켜짐)</button>
+                    <button class="layout-btn" id="toggleRefBtn" onclick="toggleReferenceBox()">👀 원래 사진 숨기기</button>
+                    
+                    <div class="slider-wrap">
+                        <span>점묘화 동그라미 크기 / 선 진하기 조절:</span>
+                        <input type="range" id="edgeSlider" min="15" max="85" value="52" style="width:160px;" oninput="applyImageFilter()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 (학생 활동 1): 오늘 수업에서 무엇을 했나요? -->
+            <div class="step-container active-task-1" id="stepBox1">
+                <h2>
+                    <span id="step3Title">👉 ① 박물관 수업에서 무엇을 했나요? (🔊)</span>
+                </h2>
+                <div class="btn-grid" id="group1Grid"></div>
+            </div>
+
+            <!-- Step 4 (학생 활동 2): 매병 풍경을 만든 기분이 어땠나요? -->
+            <div class="step-container waiting-step" id="stepBox2">
+                <h2>
+                    <span id="step4Title">👉 ② 활동한 기분이 어땠나요? (🔊)</span>
+                </h2>
+                <div class="btn-grid" id="group2Grid"></div>
+
+                <div id="lvl1-typing-box">
+                    <div style="font-size:15px; font-weight:bold; color:#1971c2; margin-bottom:6px;">
+                        ⌨️ [1수준] 매병 풍경을 만들며 기억에 남는 것 직접 써 보기 (선택):
+                    </div>
+                    <input type="text" id="lvl1CustomInput" class="lvl1-input" placeholder="예: 매병 풍경에서 딸랑딸랑 맑은 소리가 나서 정말 신기했다." oninput="updateSheet()">
+                </div>
+            </div>
+
+            <!-- 🥈 2수준 전용: 어절 단위로 터치하며 따라 말하기 -->
+            <div id="lvl2-eojeol-box">
+                <p class="eojeol-title">🗣️ [2수준] 말풍선을 순서대로 하나씩 누르며 따라 말해 보세요!</p>
+                <div id="eojeolContainer" style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                    <span style="color:#888; font-size:16px; text-align:center;">위에서 그림 버튼을 고르면 따라 말하기 좋은 어절 말풍선이 나와요!</span>
+                </div>
+                <button class="speak-all-btn" onclick="speakCombinedShort()">🔊 문장 전체 이어서 듣기</button>
+            </div>
+
+        </div>
+
+        <!-- 오른쪽: 태블릿 터치 색칠 팔레트 + A4 세로형 학습지 미리보기 -->
+        <div class="right-panel">
+
+            <!-- 🎨 태블릿/전자칠판 터치 색칠 도구 바 -->
+            <div class="tablet-paint-toolbar">
+                <div class="paint-top-row">
+                    <div class="paint-mode-group">
+                        <button class="paint-tool-btn magic-btn active" id="btnToolMagic" onclick="setPaintTool('magic')">
+                            🪄 마법 톡톡 색칠 (원래 사진색 자동!)
+                        </button>
+                        <button class="paint-tool-btn crayon-btn" id="btnToolCrayon" onclick="setPaintTool('crayon')">
+                            🖍️ 직접 색깔 골라 칠하기
+                        </button>
+                        <button class="paint-tool-btn eraser-btn" id="btnToolEraser" onclick="setPaintTool('eraser')">
+                            🧽 지우개(밑그림 복구)
+                        </button>
+                    </div>
+                    <button class="reset-paint-btn" onclick="resetCanvasPaint()">🔄 처음 도안으로</button>
+                </div>
+
+                <!-- 8색 팔레트 & 브러시 크기 조절 -->
+                <div class="crayon-palette-row">
+                    <div class="color-swatches" id="colorSwatches">
+                        <span style="font-size:13px; font-weight:bold; color:#666; margin-right:4px;" id="paletteHintText">
+                            ✨ 도안 위를 손가락으로 문지르면 원래 사진 색깔이 톡톡 살아나요!
+                        </span>
+                        <div class="color-swatch" style="background:#ff5252; display:none;" onclick="selectSwatch('#ff5252', this)" title="빨강"></div>
+                        <div class="color-swatch" style="background:#ff922b; display:none;" onclick="selectSwatch('#ff922b', this)" title="주황"></div>
+                        <div class="color-swatch" style="background:#fcc419; display:none;" onclick="selectSwatch('#fcc419', this)" title="노랑"></div>
+                        <div class="color-swatch" style="background:#51cf66; display:none;" onclick="selectSwatch('#51cf66', this)" title="초록(매병비색)"></div>
+                        <div class="color-swatch" style="background:#339af0; display:none;" onclick="selectSwatch('#339af0', this)" title="파랑"></div>
+                        <div class="color-swatch" style="background:#845ef7; display:none;" onclick="selectSwatch('#845ef7', this)" title="보라"></div>
+                        <div class="color-swatch" style="background:#ffccb3; display:none;" onclick="selectSwatch('#ffccb3', this)" title="살구색"></div>
+                        <div class="color-swatch" style="background:#495057; display:none;" onclick="selectSwatch('#495057', this)" title="검정/진회색"></div>
+                    </div>
+
+                    <div class="brush-size-group">
+                        <span>터치 붓 크기:</span>
+                        <button class="size-dot-btn" onclick="setBrushSize(14, this)">작게</button>
+                        <button class="size-dot-btn active" onclick="setBrushSize(26, this)">보통</button>
+                        <button class="size-dot-btn" onclick="setBrushSize(42, this)">크게(3수준)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="album-sheet">
+                <div class="sheet-header">
+                    <h1 class="sheet-title" id="sheetTitle">🏺 찾아오는 박물관 (매병 풍경 만들기)</h1>
+                    <p class="sheet-subtitle" id="sheetSubtitle">태블릿 화면의 도안을 손가락으로 톡톡 터치해서 색칠하거나 인쇄해 보세요!</p>
+                </div>
+
+                <!-- 상단 공통: 왼쪽(원본 컬러) + 오른쪽(점묘화/색칠 터치 캔버스) -->
+                <div class="coloring-compare-area">
+                    <div class="photo-box" id="refBox">
+                        <div class="box-label">👀 보고 색칠해요 (활동 사진)</div>
+                        <div class="box-content">
+                            <div id="refPlaceholder" class="canvas-placeholder">사진을 고르면<br>원래 사진이 나와요</div>
+                            <img id="reference-img" alt="원래 사진">
+                        </div>
+                    </div>
+
+                    <div class="photo-box sketch-box">
+                        <div class="box-label" id="canvasBoxLabel">👆 여기를 손가락으로 터치해 색칠해요!</div>
+                        <div class="box-content">
+                            <div id="canvasPlaceholder" class="canvas-placeholder">사진을 불러온 뒤<br>손가락으로 톡톡 문질러 색칠해 보세요!</div>
+                            <canvas id="coloring-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🥇1수준 & 🥈2수준용: 덧쓰기 줄공책 -->
+                <div id="tracing-paper">
+                    <div id="final-text" style="color:#ccc; font-size:21px; text-align:center; margin:auto 0;">
+                        왼쪽에서 매병 풍경 활동 그림 버튼을 고르면<br>수준에 맞는 따라 쓰기 글씨가 나타납니다 ✏️
+                    </div>
+                </div>
+
+                <!-- 🥉3수준 전용: 대형 감정 스티커 카드 + 초특대 이름 색칠하기 -->
+                <div id="lvl3-sheet-area">
+                    <div class="lvl3-sticker-row">
+                        <div class="lvl3-sticker-card" id="lvl3Card1">
+                            <span class="lvl3-big-emoji">❔</span>
+                            <span class="lvl3-card-label" style="color:#aaa;">한 일 선택</span>
+                        </div>
+                        <div class="lvl3-sticker-card" id="lvl3Card2" style="background:#ebfbee;">
+                            <span class="lvl3-big-emoji">❔</span>
+                            <span class="lvl3-card-label" style="color:#aaa;">내 기분 선택</span>
+                        </div>
+                    </div>
+                    <div class="lvl3-name-box">
+                        <div class="lvl3-name-guide">
+                            🖍️ 내 이름을 색칠하거나<br>점을 콕콕 찍어 꾸며 보세요!
+                        </div>
+                        <div class="lvl3-giant-name" id="lvl3GiantName">이름</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-btns">
+                <button class="action-btn btn-save-img" onclick="saveAsImage()">💾 색칠 완성본 이미지 저장</button>
+                <button class="action-btn btn-print-sheet" onclick="window.print()">🖨️ 세로 인쇄 / PDF 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달: 우리 반 6명 명단 및 수준 설정 -->
+    <div class="modal-overlay" id="rosterModal">
+        <div class="modal-card">
+            <h2 style="margin-top:0; font-size:22px;">⚙️ 우리 반 6명 이름 및 수준 설정</h2>
+            <p style="font-size:15px; color:#666; margin-bottom:15px;">한 번 저장해 두면 다음에도 그대로 기억합니다.</p>
+            <div id="rosterEditList"></div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="action-btn btn-save-img" style="padding:10px;" onclick="saveRosterConfig()">✅ 저장하기</button>
+                <button class="action-btn" style="background:#868e96; padding:10px;" onclick="closeRosterModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultRoster = [
+            { name: "학생1", level: 1 },
+            { name: "학생2", level: 1 },
+            { name: "학생3", level: 2 },
+            { name: "학생4", level: 2 },
+            { name: "학생5", level: 3 },
+            { name: "학생6", level: 3 }
+        ];
+        let classRoster = JSON.parse(localStorage.getItem('special_album_roster')) || defaultRoster;
+        let currentStudentIdx = 0;
+        let currentLevel = 1;
+        let isFocusMode = false;
+
+        // 🏺 찾아오는 박물관 (매병을 활용한 풍경 만들기) & 체험학습 맞춤형 문구 데이터
+        const optionsData = {
+            group1: [
+                { emoji: "🏺", full: "찾아오는 박물관 수업에서 아름다운 매병을 살펴보았어요.", short: "박물관 수업에서 매병을 봤어요", word: "매병 보기", coreLvl3: true },
+                { emoji: "🔔", full: "매병 모양으로 맑은 소리가 나는 풍경을 만들었어요.", short: "예쁜 매병 풍경을 만들었어요", word: "풍경 만들기", coreLvl3: true },
+                { emoji: "🎨", full: "매병 풍경에 예쁜 색깔과 무늬를 정성껏 꾸몄어요.", short: "매병에 예쁜 무늬를 꾸몄어요", word: "무늬 꾸미기", coreLvl3: true },
+                { emoji: "🎶", full: "완성한 매병 풍경을 흔들며 맑은 종소리를 들어보았어요.", short: "딸랑딸랑 풍경 소리를 들었어요", word: "풍경 소리 듣기", coreLvl3: true },
+                { emoji: "🚌", full: "친구들과 함께 즐겁게 체험학습을 다녀왔어요.", short: "친구들과 신나게 체험학습 갔어요", word: "체험학습", coreLvl3: false },
+                { emoji: "✌️", full: "내가 만든 작품을 들고 멋지게 기념사진을 찍었어요.", short: "작품을 들고 사진을 찍었어요", word: "사진 찍기", coreLvl3: false }
+            ],
+            group2: [
+                { emoji: "😄", full: "친구들과 함께 만들어서 정말 신나고 즐거웠어요!", short: "오늘 정말 신나고 즐거웠어요!", word: "신나요" },
+                { emoji: "👍", full: "나만의 멋진 매병 풍경을 완성해서 참 뿌듯했어요!", short: "멋지게 완성해서 뿌듯해요!", word: "뿌듯해요" },
+                { emoji: "🤩", full: "매병 모양과 맑은 풍경 소리가 정말 신기했어요!", short: "풍경 소리가 참 신기해요!", word: "신기해요" },
+                { emoji: "🥰", full: "마음이 따뜻하고 행복해서 다음에 또 만들고 싶어요!", short: "행복해서 다음에 또 할래요!", word: "행복해요" }
+            ]
+        };
+
+        let selectedIdx1 = null;
+        let selectedIdx2 = null;
+        let currentImageObj = null;
+        let colorMode = 'pointillism';
+        let showRefPhoto = true;
+        let hasPatternFrame = false;
+
+        // 🎨 태블릿 터치 색칠 관련 상태 변수
+        let paintTool = 'magic'; // 'magic'(원본색 자동점묘/채색), 'crayon'(직접 색선택), 'eraser'(도안 복구)
+        let selectedColor = '#ff5252';
+        let brushRadius = 26;
+        let isDrawing = false;
+
+        // 원본 컬러 픽셀 보관용 캔버스 & 초기 밑그림 도안 보관용 캔버스
+        const origOffCanvas = document.createElement('canvas');
+        const origOffCtx = origOffCanvas.getContext('2d');
+        const baseTemplateCanvas = document.createElement('canvas');
+        const baseTemplateCtx = baseTemplateCanvas.getContext('2d');
+        let pointGridDots = []; // 점묘화 동그라미 좌표 배열 (터치 시 동그라미가 톡톡 채워지도록)
+
+        // 경쾌한 물방울/실로폰 터치 효과음 (Web Audio API)
+        let audioCtx = null;
+        let lastSoundTime = 0;
+        function playPopSound() {
+            const now = Date.now();
+            if (now - lastSoundTime < 75) return;
+            lastSoundTime = now;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                const notes = [523.25, 587.33, 659.25, 783.99, 880.0];
+                osc.frequency.setValueAtTime(notes[Math.floor(Math.random() * notes.length)], audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.09);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.09);
+            } catch (e) {}
+        }
+
+        function initApp() {
+            renderRosterBar();
+            selectStudentFromRoster(0);
+            setupCanvasTouchEvents();
+        }
+
+        function toggleFocusMode() {
+            isFocusMode = !isFocusMode;
+            document.body.classList.toggle('focus-mode', isFocusMode);
+            updateStepHighlight();
+        }
+
+        function updateStepHighlight() {
+            const box1 = document.getElementById('stepBox1');
+            const box2 = document.getElementById('stepBox2');
+            const g1 = document.getElementById('group1Grid');
+            const g2 = document.getElementById('group2Grid');
+
+            g1.classList.toggle('has-selection', selectedIdx1 !== null);
+            g2.classList.toggle('has-selection', selectedIdx2 !== null);
+
+            if (selectedIdx1 === null) {
+                box1.className = 'step-container active-task-1';
+                box2.className = 'step-container waiting-step';
+            } else if (selectedIdx2 === null) {
+                box1.className = 'step-container';
+                box2.className = 'step-container active-task-2';
+            } else {
+                box1.className = 'step-container';
+                box2.className = 'step-container';
+            }
+        }
+
+        function renderRosterBar() {
+            const bar = document.getElementById('rosterBar');
+            bar.innerHTML = '';
+            classRoster.forEach((st, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'roster-btn' + (idx === currentStudentIdx ? ' active' : '');
+                btn.innerHTML = `${idx + 1}. ${st.name} <span class="lvl-badge">${st.level}수준</span>`;
+                btn.onclick = () => selectStudentFromRoster(idx);
+                bar.appendChild(btn);
+            });
+        }
+
+        function selectStudentFromRoster(idx) {
+            currentStudentIdx = idx;
+            const st = classRoster[idx];
+            document.getElementById('studentName').value = st.name;
+            document.getElementById('focusStudentName').innerText = st.name;
+            selectedIdx1 = null;
+            selectedIdx2 = null;
+            document.getElementById('lvl1CustomInput').value = '';
+            renderRosterBar();
+            setStudentLevel(st.level);
+        }
+
+        function setStudentLevel(lvl) {
+            currentLevel = lvl;
+            document.body.classList.remove('mode-lvl-1', 'mode-lvl-2', 'mode-lvl-3');
+            document.body.classList.add(`mode-lvl-${lvl}`);
+            if (isFocusMode) document.body.classList.add('focus-mode');
+
+            document.querySelectorAll('.lvl-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i + 1 === lvl);
+            });
+
+            const descMap = {
+                1: "🥇 1수준: 매병 풍경 문장 따라 쓰기 및 직접 입력",
+                2: "🥈 2수준: 어절 단위로 끊어 따라 말하기 & 따라 쓰기",
+                3: "🥉 3수준: 핵심 4개 큰 그림 터치 & 내 이름 색칠하기"
+            };
+            document.getElementById('levelDescText').innerText = descMap[lvl];
+
+            document.getElementById('lvl1-typing-box').style.display = (lvl === 1) ? 'block' : 'none';
+            document.getElementById('lvl2-eojeol-box').style.display = (lvl === 2) ? 'flex' : 'none';
+
+            const tracingPaper = document.getElementById('tracing-paper');
+            const lvl3Area = document.getElementById('lvl3-sheet-area');
+
+            if (lvl === 3) {
+                tracingPaper.style.display = 'none';
+                lvl3Area.style.display = 'flex';
+                if (selectedIdx1 !== null && !optionsData.group1[selectedIdx1].coreLvl3) {
+                    selectedIdx1 = null;
+                }
+            } else {
+                tracingPaper.style.display = 'flex';
+                lvl3Area.style.display = 'none';
+                tracingPaper.classList.toggle('lvl2-paper', lvl === 2);
+            }
+
+            const slider = document.getElementById('edgeSlider');
+            if (colorMode === 'pointillism') {
+                slider.value = (lvl === 1) ? 40 : (lvl === 2 ? 54 : 68);
+                if (currentImageObj) applyImageFilter();
+            }
+
+            renderChoiceButtons();
+            renderEojeolChips();
+            updateStepHighlight();
+            updateSheet();
+        }
+
+        // 🎨 터치 색칠 도구 전환 (마법 톡톡 색칠 vs 직접 색깔 고르기 vs 지우개)
+        function setPaintTool(tool) {
+            paintTool = tool;
+            document.getElementById('btnToolMagic').classList.toggle('active', tool === 'magic');
+            document.getElementById('btnToolCrayon').classList.toggle('active', tool === 'crayon');
+            document.getElementById('btnToolEraser').classList.toggle('active', tool === 'eraser');
+
+            const swatches = document.querySelectorAll('.color-swatch');
+            const hint = document.getElementById('paletteHintText');
+
+            if (tool === 'crayon') {
+                hint.style.display = 'none';
+                swatches.forEach((s, i) => {
+                    s.style.display = 'block';
+                    if (i === 0 && !document.querySelector('.color-swatch.active')) {
+                        s.classList.add('active');
+                    }
+                });
+            } else if (tool === 'magic') {
+                swatches.forEach(s => s.style.display = 'none');
+                hint.style.display = 'inline';
+                hint.innerText = '✨ 도안 위를 손가락으로 문지르면 원래 사진의 진짜 색깔이 톡톡 살아나요!';
+            } else {
+                swatches.forEach(s => s.style.display = 'none');
+                hint.style.display = 'inline';
+                hint.innerText = '🧽 지우고 싶은 곳을 문지르면 처음 점묘화/윤곽선 밑그림으로 돌아가요!';
+            }
+        }
+
+        function selectSwatch(colorHex, elem) {
+            selectedColor = colorHex;
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            elem.classList.add('active');
+        }
+
+        function setBrushSize(size, elem) {
+            brushRadius = size;
+            document.querySelectorAll('.size-dot-btn').forEach(b => b.classList.remove('active'));
+            elem.classList.add('active');
+        }
+
+        function resetCanvasPaint() {
+            if (!currentImageObj) return;
+            const canvas = document.getElementById('coloring-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(baseTemplateCanvas, 0, 0);
+            pointGridDots.forEach(d => d.painted = false);
+        }
+
+        // 👆 태블릿 & 마우스 공용 터치 색칠 이벤트 설정
+        function setupCanvasTouchEvents() {
+            const canvas = document.getElementById('coloring-canvas');
+
+            function getCanvasCoords(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * scaleX,
+                    y: (clientY - rect.top) * scaleY
+                };
+            }
+
+            function paintAtPoint(x, y) {
+                if (!currentImageObj) return;
+                const ctx = canvas.getContext('2d');
+
+                // 1) 점묘화 모드일 때: 터치 반경 내의 동그라미들을 톡톡 선명하게 채워줌!
+                if (colorMode === 'pointillism' && paintTool !== 'eraser') {
+                    let newlyPainted = false;
+                    for (let i = 0; i < pointGridDots.length; i++) {
+                        const dot = pointGridDots[i];
+                        const dist = Math.hypot(dot.x - x, dot.y - y);
+                        if (dist <= brushRadius + dot.radius * 0.6) {
+                            ctx.beginPath();
+                            ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+                            if (paintTool === 'magic') {
+                                // 마법 모드: 원래 사진의 진짜 색상을 선명하게 채움
+                                ctx.fillStyle = `rgb(${dot.r}, ${dot.g}, ${dot.b})`;
+                            } else {
+                                // 직접 색칠 모드: 선택한 크레용 색상을 채우되 원본 명암을 살짝 반영
+                                ctx.fillStyle = selectedColor;
+                            }
+                            ctx.fill();
+                            ctx.lineWidth = (dot.gVal < 95) ? 1.8 : 1.1;
+                            ctx.strokeStyle = '#222222';
+                            ctx.stroke();
+
+                            if (!dot.painted) {
+                                dot.painted = true;
+                                newlyPainted = true;
+                            }
+                        }
+                    }
+                    if (newlyPainted) playPopSound();
+                    return;
+                }
+
+                // 2) 지우개 모드: 처음 밑그림 도안으로 복구
+                if (paintTool === 'eraser') {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(baseTemplateCanvas, 0, 0);
+                    ctx.restore();
+                    if (colorMode === 'pointillism') {
+                        pointGridDots.forEach(dot => {
+                            if (Math.hypot(dot.x - x, dot.y - y) <= brushRadius) dot.painted = false;
+                        });
+                    }
+                    return;
+                }
+
+                // 3) 일반/수채화/만화선 도안에서 마법 색칠 또는 크레용 색칠
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+                ctx.clip();
+
+                if (paintTool === 'magic') {
+                    // 원본 사진의 색상을 그대로 복원하되 도안 윤곽선이 살아나도록 합성
+                    ctx.globalAlpha = 0.85;
+                    ctx.drawImage(origOffCanvas, 0, 0);
+                    ctx.globalCompositeOperation = 'multiply';
+                    ctx.drawImage(baseTemplateCanvas, 0, 0);
+                } else {
+                    // 크레용 색상으로 곱하기(multiply) 채색하여 검은 윤곽선이 지워지지 않게 함
+                    ctx.globalCompositeOperation = 'multiply';
+                    ctx.fillStyle = selectedColor;
+                    ctx.fillRect(x - brushRadius, y - brushRadius, brushRadius * 2, brushRadius * 2);
+                }
+                ctx.restore();
+                playPopSound();
+            }
+
+            canvas.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                isDrawing = true;
+                const pt = getCanvasCoords(e);
+                paintAtPoint(pt.x, pt.y);
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pt = getCanvasCoords(e);
+                paintAtPoint(pt.x, pt.y);
+            });
+
+            window.addEventListener('pointerup', () => {
+                isDrawing = false;
+            });
+        }
+
+        function renderChoiceButtons() {
+            const g1 = document.getElementById('group1Grid');
+            const g2 = document.getElementById('group2Grid');
+            g1.innerHTML = '';
+            g2.innerHTML = '';
+
+            optionsData.group1.forEach((item, idx) => {
+                if (currentLevel === 3 && !item.coreLvl3) return;
+
+                const label = (currentLevel === 1) ? item.full : (currentLevel === 2 ? item.short : item.word);
+                const btn = document.createElement('button');
+                btn.className = 'word-btn group1' + (selectedIdx1 === idx ? ' active' : '');
+                btn.innerHTML = `<span class="emoji-icon">${item.emoji}</span> <span>${label}</span>`;
+                btn.onclick = () => onSelectOption(1, idx);
+                g1.appendChild(btn);
+            });
+
+            optionsData.group2.forEach((item, idx) => {
+                const label = (currentLevel === 1) ? item.full : (currentLevel === 2 ? item.short : item.word);
+                const btn = document.createElement('button');
+                btn.className = 'word-btn group2' + (selectedIdx2 === idx ? ' active' : '');
+                btn.innerHTML = `<span class="emoji-icon">${item.emoji}</span> <span>${label}</span>`;
+                btn.onclick = () => onSelectOption(2, idx);
+                g2.appendChild(btn);
+            });
+        }
+
+        function onSelectOption(group, idx) {
+            if (group === 1) selectedIdx1 = idx;
+            if (group === 2) selectedIdx2 = idx;
+
+            const item = (group === 1) ? optionsData.group1[idx] : optionsData.group2[idx];
+            const speakTarget = (currentLevel === 1) ? item.full : (currentLevel === 2 ? item.short : item.word);
+            
+            speakText(speakTarget, currentLevel === 2 ? 0.9 : 0.95);
+            renderChoiceButtons();
+            updateStepHighlight();
+            if (currentLevel === 2) renderEojeolChips();
+            updateSheet();
+        }
+
+        function renderEojeolChips() {
+            if (currentLevel !== 2) return;
+            const container = document.getElementById('eojeolContainer');
+            container.innerHTML = '';
+
+            if (selectedIdx1 === null && selectedIdx2 === null) {
+                container.innerHTML = '<span style="color:#888; font-size:16px; text-align:center;">위에서 그림 버튼을 고르면 따라 말하기 좋은 어절 말풍선이 나와요!</span>';
+                return;
+            }
+
+            function createEojeolRow(emoji, sentence) {
+                const row = document.createElement('div');
+                row.className = 'eojeol-row';
+                const words = sentence.split(' ');
+
+                words.forEach((word, idx) => {
+                    const chip = document.createElement('button');
+                    chip.className = 'eojeol-chip';
+                    chip.innerHTML = (idx === 0 ? `<span>${emoji}</span> ` : '') + `<span>${word}</span>`;
+                    chip.onclick = () => {
+                        chip.classList.add('spoken');
+                        speakText(word, 0.88);
+                    };
+                    row.appendChild(chip);
+
+                    if (idx < words.length - 1) {
+                        const arrow = document.createElement('span');
+                        arrow.className = 'eojeol-arrow';
+                        arrow.innerText = '▶';
+                        row.appendChild(arrow);
+                    }
+                });
+                return row;
+            }
+
+            if (selectedIdx1 !== null) {
+                const it1 = optionsData.group1[selectedIdx1];
+                container.appendChild(createEojeolRow(it1.emoji, it1.short));
+            }
+            if (selectedIdx2 !== null) {
+                const it2 = optionsData.group2[selectedIdx2];
+                container.appendChild(createEojeolRow(it2.emoji, it2.short));
+            }
+        }
+
+        function speakCombinedShort() {
+            let text = "";
+            if (selectedIdx1 !== null) text += optionsData.group1[selectedIdx1].short + ". ";
+            if (selectedIdx2 !== null) text += optionsData.group2[selectedIdx2].short;
+            if (text) speakText(text, 0.9);
+        }
+
+        function speakText(text, rate = 0.95) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+            const utter = new SpeechSynthesisUtterance(cleanText);
+            utter.lang = 'ko-KR';
+            utter.rate = rate;
+            window.speechSynthesis.speak(utter);
+        }
+
+        function updateSheet() {
+            const tripSelect = document.getElementById('tripSelect');
+            const tripText = tripSelect.options[tripSelect.selectedIndex].text;
+            const customPlace = document.getElementById('placeName').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
+
+            document.getElementById('focusStudentName').innerText = studentName || '학생';
+
+            const titleTopic = customPlace ? `🏺 ${customPlace}` : tripText;
+
+            document.getElementById('sheetTitle').innerText = studentName
+                ? `${titleTopic} (${studentName})`
+                : `${titleTopic}`;
+
+            if (currentLevel === 3) {
+                const c1 = document.getElementById('lvl3Card1');
+                const c2 = document.getElementById('lvl3Card2');
+
+                if (selectedIdx1 !== null) {
+                    const it1 = optionsData.group1[selectedIdx1];
+                    c1.innerHTML = `<span class="lvl3-big-emoji">${it1.emoji}</span><span class="lvl3-card-label">${it1.word}</span>`;
+                } else {
+                    c1.innerHTML = `<span class="lvl3-big-emoji">❔</span><span class="lvl3-card-label" style="color:#aaa;">한 일 선택</span>`;
+                }
+
+                if (selectedIdx2 !== null) {
+                    const it2 = optionsData.group2[selectedIdx2];
+                    c2.innerHTML = `<span class="lvl3-big-emoji">${it2.emoji}</span><span class="lvl3-card-label">${it2.word}</span>`;
+                } else {
+                    c2.innerHTML = `<span class="lvl3-big-emoji">❔</span><span class="lvl3-card-label" style="color:#aaa;">내 기분 선택</span>`;
+                }
+
+                document.getElementById('lvl3GiantName').innerText = studentName || "내이름";
+                return;
+            }
+
+            const finalTextDiv = document.getElementById('final-text');
+            const customLine = document.getElementById('lvl1CustomInput').value.trim();
+
+            if (selectedIdx1 === null && selectedIdx2 === null && !customLine && !studentName) {
+                finalTextDiv.style.color = "#ccc";
+                finalTextDiv.style.fontSize = "21px";
+                finalTextDiv.style.textAlign = "center";
+                finalTextDiv.innerHTML = "왼쪽에서 매병 풍경 활동 그림 버튼을 고르면<br>수준에 맞는 따라 쓰기 글씨가 나타납니다 ✏️";
+                return;
+            }
+
+            finalTextDiv.style.color = "#b5b5b5";
+            finalTextDiv.style.fontSize = "";
+            finalTextDiv.style.textAlign = (currentLevel === 2) ? "center" : "left";
+
+            let html = "<div>";
+            if (currentLevel === 1) {
+                if (selectedIdx1 !== null) html += `${optionsData.group1[selectedIdx1].emoji} ${optionsData.group1[selectedIdx1].full}<br>`;
+                if (selectedIdx2 !== null) html += `${optionsData.group2[selectedIdx2].emoji} ${optionsData.group2[selectedIdx2].full}<br>`;
+                if (customLine) html += `✏️ ${customLine}<br>`;
+            } else if (currentLevel === 2) {
+                if (selectedIdx1 !== null) html += `${optionsData.group1[selectedIdx1].emoji} ${optionsData.group1[selectedIdx1].short}<br>`;
+                if (selectedIdx2 !== null) html += `${optionsData.group2[selectedIdx2].emoji} ${optionsData.group2[selectedIdx2].short}<br>`;
+            }
+            html += "</div>";
+
+            const nameDisplay = studentName || "(내 이름)";
+            html += `<div class="signature-line">- 멋진 <strong>${nameDisplay}</strong> 씀 -</div>`;
+            finalTextDiv.innerHTML = html;
+        }
+
+        function loadPhotos(event) {
+            const files = Array.from(event.target.files).filter(f => f.type.startsWith('image/'));
+            if (files.length === 0) return;
+
+            const container = document.getElementById('thumbContainer');
+            container.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const url = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'thumb-img';
+                img.onclick = () => selectPhotoForColoring(url, img);
+                container.appendChild(img);
+                if (index === 0) selectPhotoForColoring(url, img);
+            });
+        }
+
+        function selectPhotoForColoring(url, thumbElem) {
+            document.querySelectorAll('.thumb-img').forEach(el => el.classList.remove('active'));
+            if (thumbElem) thumbElem.classList.add('active');
+
+            const refImg = document.getElementById('reference-img');
+            refImg.src = url;
+            refImg.style.display = 'block';
+            document.getElementById('refPlaceholder').style.display = 'none';
+
+            const img = new Image();
+            img.onload = function() {
+                currentImageObj = img;
+                document.getElementById('canvasPlaceholder').style.display = 'none';
+                const canvas = document.getElementById('coloring-canvas');
+                canvas.style.display = 'block';
+                applyImageFilter();
+            };
+            img.src = url;
+        }
+
+        function togglePatternFrame() {
+            hasPatternFrame = !hasPatternFrame;
+            const sheet = document.getElementById('album-sheet');
+            const btn = document.getElementById('frameBtn');
+            sheet.classList.toggle('with-pattern-frame', hasPatternFrame);
+            btn.classList.toggle('active', hasPatternFrame);
+            btn.innerText = hasPatternFrame ? '⭐ 화면 여백무늬 켜짐' : '⭐ 화면 여백무늬 끄기(인쇄시 자동켜짐)';
+        }
+
+        function toggleReferenceBox() {
+            showRefPhoto = !showRefPhoto;
+            document.getElementById('refBox').style.display = showRefPhoto ? 'flex' : 'none';
+            document.getElementById('toggleRefBtn').innerText = showRefPhoto
+                ? '👀 원래 사진 숨기기'
+                : '👀 원래 사진 같이 보기';
+        }
+
+        function setColorMode(mode, btnElem) {
+            colorMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btnElem.classList.add('active');
+            applyImageFilter();
+        }
+
+        // 🎨 점묘화(Pointillism) + 수채화 밑색 + 만화선 + 윤곽선 변환 및 터치 데이터 생성
+        function applyImageFilter() {
+            if (!currentImageObj) return;
+            const canvas = document.getElementById('coloring-canvas');
+            const ctx = canvas.getContext('2d');
+
+            const maxW = 680;
+            const scale = Math.min(1, maxW / currentImageObj.width);
+            const w = Math.floor(currentImageObj.width * scale);
+            const h = Math.floor(currentImageObj.height * scale);
+
+            canvas.width = w;
+            canvas.height = h;
+            origOffCanvas.width = w;
+            origOffCanvas.height = h;
+            baseTemplateCanvas.width = w;
+            baseTemplateCanvas.height = h;
+
+            origOffCtx.drawImage(currentImageObj, 0, 0, w, h);
+            const imgData = origOffCtx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const sliderVal = parseInt(document.getElementById('edgeSlider').value);
+
+            const gray = new Uint8Array(w * h);
+            for (let i = 0; i < data.length; i += 4) {
+                gray[i >> 2] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            }
+
+            pointGridDots = [];
+
+            // 🟣 1. 점묘화(콕콕 찍기) 도안 모드
+            if (colorMode === 'pointillism') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, w, h);
+
+                const step = Math.max(10, Math.floor(sliderVal / 3.4));
+                const radius = (step / 2) * 0.84;
+
+                for (let y = Math.floor(step / 2); y < h; y += step) {
+                    for (let x = Math.floor(step / 2); x < w; x += step) {
+                        const idx = y * w + x;
+                        const pIdx = idx * 4;
+
+                        const r = data[pIdx];
+                        const g = data[pIdx + 1];
+                        const b = data[pIdx + 2];
+                        const gVal = gray[idx];
+
+                        if (gVal > 244) continue;
+
+                        // 터치 전 초기 도안은 연한 파스텔 밑색(30%)으로 가이드 표시
+                        const tint = 0.30;
+                        const tr = Math.floor(255 * (1 - tint) + r * tint);
+                        const tg = Math.floor(255 * (1 - tint) + g * tint);
+                        const tb = Math.floor(255 * (1 - tint) + b * tint);
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgb(${tr}, ${tg}, ${tb})`;
+                        ctx.fill();
+
+                        ctx.lineWidth = (gVal < 95) ? 1.6 : 0.9;
+                        ctx.strokeStyle = (gVal < 95) ? '#555555' : '#bbbbbb';
+                        ctx.stroke();
+
+                        // 태블릿 터치 시 100% 선명한 색상으로 채우기 위해 좌표 저장
+                        pointGridDots.push({ x, y, radius, r, g, b, gVal, painted: false });
+                    }
+                }
+                baseTemplateCtx.drawImage(canvas, 0, 0);
+                return;
+            }
+
+            const outData = ctx.createImageData(w, h);
+            const out = outData.data;
+            const sensitivity = sliderVal / 22;
+
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    const idx = y * w + x;
+                    const pIdx = idx * 4;
+
+                    const gx =
+                        -1 * gray[idx - w - 1] + 1 * gray[idx - w + 1] +
+                        -2 * gray[idx - 1]     + 2 * gray[idx + 1] +
+                        -1 * gray[idx + w - 1] + 1 * gray[idx + w + 1];
+                    const gy =
+                        -1 * gray[idx - w - 1] - 2 * gray[idx - w] - 1 * gray[idx - w + 1] +
+                         1 * gray[idx + w - 1] + 2 * gray[idx + w] + 1 * gray[idx + w + 1];
+
+                    let edge = Math.sqrt(gx * gx + gy * gy) * sensitivity;
+
+                    if (colorMode === 'pastel') {
+                        let pr = Math.floor(data[pIdx] / 32) * 32;
+                        let pg = Math.floor(data[pIdx + 1] / 32) * 32;
+                        let pb = Math.floor(data[pIdx + 2] / 32) * 32;
+
+                        const tintRatio = 0.34;
+                        let r = 255 * (1 - tintRatio) + pr * tintRatio;
+                        let g = 255 * (1 - tintRatio) + pg * tintRatio;
+                        let b = 255 * (1 - tintRatio) + pb * tintRatio;
+
+                        if (edge > 28) {
+                            const lineDarkness = Math.max(0.08, 1 - (edge / 130));
+                            r *= lineDarkness;
+                            g *= lineDarkness;
+                            b *= lineDarkness;
+                        }
+                        out[pIdx] = r;
+                        out[pIdx + 1] = g;
+                        out[pIdx + 2] = b;
+                        out[pIdx + 3] = 255;
+
+                    } else if (colorMode === 'comic') {
+                        let gVal = gray[idx];
+                        let val = 255;
+                        if (edge > 45 || gVal < 55) {
+                            val = 25;
+                        } else if (gVal < 110) {
+                            val = 215;
+                        }
+                        out[pIdx] = out[pIdx + 1] = out[pIdx + 2] = val;
+                        out[pIdx + 3] = 255;
+
+                    } else {
+                        let pixelVal = 255 - edge;
+                        if (pixelVal > 225) pixelVal = 255;
+                        if (pixelVal < 30) pixelVal = 30;
+                        out[pIdx] = out[pIdx + 1] = out[pIdx + 2] = pixelVal;
+                        out[pIdx + 3] = 255;
+                    }
+                }
+            }
+            ctx.putImageData(outData, 0, 0);
+            baseTemplateCtx.drawImage(canvas, 0, 0);
+        }
+
+        async function saveAsImage() {
+            const customPlace = document.getElementById('placeName').value.trim();
+            const tripVal = customPlace || document.getElementById('tripSelect').value;
+            const studentName = document.getElementById('studentName').value.trim() || '학생';
+            const sheet = document.getElementById('album-sheet');
+
+            const wasPatternOn = sheet.classList.contains('with-pattern-frame');
+            sheet.classList.add('with-pattern-frame');
+
+            const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff' });
+            const link = document.createElement('a');
+            link.download = `${tripVal}_${studentName}_${currentLevel}수준_태블릿색칠앨범.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            if (!wasPatternOn) sheet.classList.remove('with-pattern-frame');
+        }
+
+        function openRosterModal() {
+            const list = document.getElementById('rosterEditList');
+            list.innerHTML = '';
+            classRoster.forEach((st, i) => {
+                const row = document.createElement('div');
+                row.className = 'roster-edit-row';
+                row.innerHTML = `
+                    <span style="font-weight:bold; width:55px;">학생 ${i + 1}</span>
+                    <input type="text" id="editName_${i}" value="${st.name}">
+                    <select id="editLvl_${i}">
+                        <option value="1" ${st.level === 1 ? 'selected' : ''}>🥇 1수준 (문장·타이핑)</option>
+                        <option value="2" ${st.level === 2 ? 'selected' : ''}>🥈 2수준 (어절 모방)</option>
+                        <option value="3" ${st.level === 3 ? 'selected' : ''}>🥉 3수준 (그림 4개·이름색칠)</option>
+                    </select>
+                `;
+                list.appendChild(row);
+            });
+            document.getElementById('rosterModal').style.display = 'flex';
+        }
+
+        function closeRosterModal() {
+            document.getElementById('rosterModal').style.display = 'none';
+        }
+
+        function saveRosterConfig() {
+            for (let i = 0; i < 6; i++) {
+                const nameVal = document.getElementById(`editName_${i}`).value.trim() || `학생${i + 1}`;
+                const lvlVal = parseInt(document.getElementById(`editLvl_${i}`).value);
+                classRoster[i] = { name: nameVal, level: lvlVal };
+            }
+            localStorage.setItem('special_album_roster', JSON.stringify(classRoster));
+            closeRosterModal();
+            selectStudentFromRoster(currentStudentIdx);
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.altKey && e.key >= '1' && e.key <= '6') {
+                e.preventDefault();
+                selectStudentFromRoster(parseInt(e.key) - 1);
+            } else if (e.altKey && (e.key === 'f' || e.key === 'F' || e.key === 'ㄹ')) {
+                e.preventDefault();
+                toggleFocusMode();
+            }
+        });
+
+        initApp();
+    </script>
+</body>
+</html>
